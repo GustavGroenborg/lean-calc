@@ -7,6 +7,7 @@ inductive Token where
   | minus  : Token
   | inum   : Nat  -> Token
   | space  : Token
+  deriving Repr
 
 def lex (str : String) : Except String Token :=
     if str.isNat then Except.ok <| Token.inum str.toNat!

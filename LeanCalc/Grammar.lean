@@ -3,7 +3,7 @@ structure VarId where
   deriving Repr, BEq, DecidableEq
 
 structure INum where
-  val : Int
+  val : Nat
   deriving Repr, BEq, DecidableEq
 
 inductive Val where
