@@ -1,0 +1,10 @@
+name = "lean-calc"
+version = "0.1.0"
+defaultTargets = ["lean-calc"]
+
+[[lean_lib]]
+name = "LeanCalc"
+
+[[lean_exe]]
+name = "lean-calc"
+root = "Main"
