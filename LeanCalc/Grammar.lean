@@ -7,13 +7,13 @@ structure INum where
   deriving Repr, BEq, DecidableEq
 
 inductive Val where
-  | varId : VarId -> Val
   | inum  : INum  -> Val
+  | varId : VarId -> Val
   deriving Repr, BEq, DecidableEq
 
 inductive Expr where
-  | plus   : Val -> Expr -> Expr
   | minus  : Val -> Expr -> Expr
+  | plus   : Val -> Expr -> Expr
   | lambda : Expr
   deriving Repr, BEq, DecidableEq
 
