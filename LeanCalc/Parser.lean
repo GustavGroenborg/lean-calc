@@ -3,6 +3,7 @@ import LeanCalc.Lexer
 
 abbrev Parser α := StateT (List Token) (Except String) α
 
+-- TODO: Consider deleting
 def parseToken : Parser Token := do
   let tokens <- get
   match tokens with
@@ -11,6 +12,7 @@ def parseToken : Parser Token := do
     return t
   | [] => throw "Syntax error: Unexpected EOL"
 
+-- TODO: Consider deleting
 def peekToken? : Parser (Option Token) := do
   let tokens <- get
   match tokens with
@@ -23,7 +25,7 @@ def varId : List Token -> Except String (VarId × List Token)
   | [] => Except.error "Unexpected EOL."
 
 theorem varId_le_length (tokens : List Token) (variableId : VarId) (tokens' : List Token)
-  (hypothesis : varId tokens = Except.ok (variableId, tokens')) : tokens'.length <= tokens.length := by
+  (hypothesis : varId tokens = Except.ok (variableId, tokens')) : tokens'.length < tokens.length := by
   dsimp [varId] at hypothesis
   split at hypothesis
   -- case 0: Token.id :: tokens
@@ -48,7 +50,7 @@ def val (tokens : List Token) : Except String (Val × List Token) :=
 
 -- Proof made with the help of Google Gemini
 theorem val_le_length (tokens : List Token) (value : Val) (tokens' : List Token)
-  (hypothesis : val tokens = Except.ok (value, tokens')) : tokens'.length <= tokens.length := by
+  (hypothesis : val tokens = Except.ok (value, tokens')) : tokens'.length < tokens.length := by
   dsimp [val] at hypothesis
   split at hypothesis
   -- case 0: Token.id c :: tokens
@@ -64,7 +66,7 @@ def expr : List Token -> Except String (Expr × List Token)
   | Token.plus :: tokens =>
     match hypothesis : val tokens with
     | Except.ok (value, tokens') =>
-      have : tokens'.length <= tokens.length := val_le_length _ _ _ hypothesis
+      have : tokens'.length < tokens.length := val_le_length _ _ _ hypothesis
       match expr tokens' with
       | Except.ok (expression, tokens'') => Except.ok (Expr.plus value expression, tokens'')
       | Except.error e => Except.error e
@@ -72,7 +74,7 @@ def expr : List Token -> Except String (Expr × List Token)
   | Token.minus :: tokens =>
     match hypothesis : val tokens with
     | Except.ok (value, tokens') =>
-      have : tokens'.length <= tokens.length := val_le_length _ _ _ hypothesis
+      have : tokens'.length < tokens.length := val_le_length _ _ _ hypothesis
       match expr tokens' with
       | Except.ok (expression, tokens'') => Except.ok (Expr.minus value expression, tokens'')
       | Except.error e => Except.error e
@@ -113,7 +115,7 @@ termination_by tokens.length
 decreasing_by
   all_goals
     simp_all
-    omega    
+    omega
 
 def stmt : List Token -> Except String (Stmt × List Token)
   | Token.assign :: tokens => 
@@ -136,7 +138,7 @@ def stmt : List Token -> Except String (Stmt × List Token)
 
 -- This proof I actually made myself.
 theorem stmt_le_length (tokens : List Token) (statement : Stmt) (tokens' : List Token)
-  (hypothesis : stmt tokens = Except.ok (statement, tokens')) : tokens'.length <= tokens.length := by
+  (hypothesis : stmt tokens = Except.ok (statement, tokens')) : tokens'.length < tokens.length := by
   dsimp [stmt] at hypothesis
   split at hypothesis
   -- case 1: Token.assign :: tokens
@@ -167,13 +169,56 @@ theorem stmt_le_length (tokens : List Token) (statement : Stmt) (tokens' : List 
   · contradiction
 
 def stmts : List Token -> Except String (Stmts × List Token)
-  | Token.assign :: tokens | Token.print :: tokens => 
+  | tokens@(Token.assign :: _) | tokens@(Token.print :: _) => 
     match hypothesis : stmt tokens with
     | Except.ok (statement, tokens') =>
-      have : tokens'.length <= tokens.length := stmt_le_length _ _ _ hypothesis
+      have : tokens'.length < tokens.length := stmt_le_length _ _ _ hypothesis
       match stmts tokens' with
       | Except.ok (statements, tokens'') => Except.ok (Stmts.cons statement statements, tokens'')
       | Except.error e => Except.error e
     | Except.error e => Except.error e
   | tokens => Except.ok (Stmts.lambda, tokens)
 termination_by tokens => tokens.length
+
+def dcl : List Token -> Except String (Dcl × List Token)
+  | Token.intdcl :: tokens =>
+    match varId tokens with
+    | Except.ok (id, tokens') => Except.ok ( Dcl.iNumDcl id, tokens')
+    | Except.error e => Except.error e
+  | token :: _ => Except.error s!"Expected '{Token.intdcl}' but received '{token}'"
+  | [] => Except.error "Unexpected EOL!"
+
+theorem dcl_le_length (tokens : List Token) (declaration : Dcl) (tokens' : List Token)
+  (hypothesis : dcl tokens = Except.ok (declaration, tokens')) : tokens'.length < tokens.length := by
+  dsimp [dcl] at hypothesis
+  split at hypothesis
+  -- case 1 : Token.intdcl
+  · split at hypothesis
+    -- Happy path
+    · have h1 := varId_le_length _ _ _ (by assumption)
+      simp_all
+      omega
+    -- varId fails
+    · simp_all
+  -- case 2 : other token
+  · contradiction
+  -- case 3 : empty list
+  · contradiction    
+
+def dcls : List Token -> Except String (Dcls × List Token)
+  | tokens@(Token.intdcl :: _) => 
+    match hypothesis : dcl tokens with
+    | Except.ok (declaration, tokens') =>
+      have : tokens'.length < tokens.length := dcl_le_length _ _ _ hypothesis
+      match dcls tokens' with
+      | Except.ok (declarations, tokens'') => Except.ok (Dcls.cons declaration declarations, tokens'')
+      | Except.error e => Except.error e
+    | Except.error e => Except.error e
+  | tokens => Except.ok (Dcls.lambda, tokens)
+termination_by tokens => tokens.length
+
+def parseInput (tokens : List Token) : Except String Prog := do
+  let (declarations, tokens') <- dcls tokens
+  let (statements, _) <- stmts tokens'
+  return Prog.mk declarations statements
+  
