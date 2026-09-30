@@ -9,6 +9,17 @@ inductive Token where
   | space  : Token
   deriving BEq, Repr
 
+instance : ToString Token where
+  toString
+  | Token.intdcl => "Token.intdcl"
+  | Token.print  => "Token.print"
+  | Token.id c   => s!"Token.id '{c}'"
+  | Token.assign => "Token.assing"
+  | Token.plus   => "Token.plus"
+  | Token.minus  => "Token.minus"
+  | Token.inum n => s!"Token.inum '{n}'"
+  | Token.space  => "Token.space"
+
 def lex (str : String) : Except String Token :=
     if str.isNat then Except.ok <| Token.inum str.toNat!
     else match str with
