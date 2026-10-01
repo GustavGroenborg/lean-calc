@@ -5,3 +5,4 @@ import LeanCalc.Grammar
 import LeanCalc.Lexer
 import LeanCalc.Parser
 import LeanCalc.Analyser
+import LeanCalc.Evaluator
