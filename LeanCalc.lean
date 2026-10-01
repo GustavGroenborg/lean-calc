@@ -4,3 +4,4 @@ import LeanCalc.Basic
 import LeanCalc.Grammar
 import LeanCalc.Lexer
 import LeanCalc.Parser
+import LeanCalc.Analyser
