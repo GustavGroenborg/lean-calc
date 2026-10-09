@@ -1,6 +1,7 @@
 import LeanCalc.Grammar
 import LeanCalc.Lexer
 
+-- TODO: Delete this
 abbrev Parser α := StateT (List Token) (Except String) α
 
 -- TODO: Consider deleting

@@ -42,3 +42,10 @@ structure Prog where
   deriving Repr
 
 def hellocfg := IO.println "hello from cfg"
+
+-- "We have Haskell at home"
+def add : INum -> INum -> INum
+  | lhs, rhs => INum.mk <| lhs.val + rhs.val
+
+def subtract (lhs : INum) (rhs : INum) : INum :=
+  INum.mk <| lhs.val - rhs.val
