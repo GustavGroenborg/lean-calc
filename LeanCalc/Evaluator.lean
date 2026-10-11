@@ -43,5 +43,7 @@ def evalStmts : Stmts -> StateT SymbolTable (Except String) (List String)
     | none     => return strs
   | Stmts.lambda => return []
 
-def evaluate (symbols : List Symbol) (stmts : Stmts) : Except String (List String) := do
-  sorry
+def evaluate (prog : Prog)  : Except String (List String) := do
+  let symbolTable := initSymbolTable prog.dcls
+  let (strs, _) <- evalStmts prog.stmts symbolTable
+  return strs

@@ -20,9 +20,9 @@ def setSymbol (symbol : Symbol) (symbols : SymbolTable) : SymbolTable :=
   | some _ => symbols.map (fun s => if s.id == symbol.id then symbol else s)
   | none   => symbol :: symbols
 
-def initSymbols : Dcls -> SymbolTable
+def initSymbolTable : Dcls -> SymbolTable
   | Dcls.cons dcl dcls' =>
     -- match statement is overkill, but allows for easily adding more types later on
     match dcl with
-    | Dcl.iNumDcl id => (Symbol.mk id none) :: initSymbols dcls'
+    | Dcl.iNumDcl id => (Symbol.mk id none) :: initSymbolTable dcls'
   | Dcls.lambda => []
