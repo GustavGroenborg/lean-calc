@@ -20,6 +20,19 @@ instance : ToString Token where
   | Token.inum n => s!"Token.inum '{n}'"
   | Token.space  => "Token.space"
 
+def isVarChar (char : Char) : Bool := 
+  'a' <= char && char <= 'h'
+  || 'j' <= char && char <= 'o'
+  || 'r' <= char && char <= 'z'
+
+def lexId? (str : String) : Except String Token :=
+  if str.length == 1 then Except.ok <| Token.id str.front
+  else Except.error s!"Lexical error: ID token '{str}' too long. Max length 1."
+
+def lexNum? (str : String) : Except String Token := 
+  if str.isNat then Except.ok <| Token.inum str.toNat!
+  else Except.error s!"Lexical error: INum token '{str}' is not a natural number."
+
 def lex (str : String) : Except String Token :=
     if str.isNat then Except.ok <| Token.inum str.toNat!
     else match str with
@@ -29,9 +42,9 @@ def lex (str : String) : Except String Token :=
       | "+" => Except.ok Token.plus
       | "-" => Except.ok Token.minus
       | " " => Except.ok Token.space
-      | _   => 
-        if str.length == 1 then Except.ok <| Token.id str.front
-        else Except.error s!"Lexical error: Unrecognised token '{str}'"
+      | _   =>
+        if isVarChar str.front then lexId? str
+        else lexNum? str
 
 def lexInput (input : List String) : Except String (List Token) :=
   match input with
