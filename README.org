@@ -1,0 +1,72 @@
+#+Title: This is a shitty calculator; but it is made in Lean4
+
+This is a simple, very simple, implementation of the "ac" language, presented in
+"Crafting a Compiler" by Charles N. Fischer, Ron K. Cytron and Richard LeBlanc,
+Jr.. I made this implementation, merely to get a grasp of Lean4, and therefor,
+quite some concepts has been left out, e.g. floating point numbers. In [[* Syntax]],
+the abstract syntax for the language is presented, please note that differences
+between the implementation and the reference language is not presented. In [[*
+Usage]], a small description of how to use the language is given, along with some
+small examples of calculations that can be done. [[* Building]] describes how to
+build the implementation, on Nix. Lastly, [[* Use of AI]] declares to what extent AI
+has been used for this small project of mine.
+
+* Syntax
+Below, the abstract syntax, as defined in [[lean-calc/Grammar.lean][Grammar.lean]].
+#+begin_src
+  Prog  ::= Dcls Stmts
+
+  Dcls  ::= Dcl Dcls
+          | lambda
+
+  Dcl   ::= INum
+
+  Stmts ::= Stmt Stmts
+          | lambda
+
+  Stmt  ::= VarId = Val Expr
+          | print VarId
+
+  Expr  ::= Val - Expr
+          | Val + Expr
+  	  | lambda
+
+  Val   ::= INum
+          | VarId
+
+  INum  ::= n
+  VarId ::= c
+#+end_src
+
+* Usage
+
+The below program defines to variables, ~a~ and ~b~, and does a basic addition.
+#+begin_src
+  i a i b a = 2 b = 4 + a p b
+#+end_src
+
+When writing programs, the most important thing to remember, is that you have to
+declare each variable before it is used. Variables are declared with ~i~. You
+also have to explicitly print a variable, else no output will be
+written. Variables are printed with the function ~p~.
+
+* Building
+Building is very simple and easy on [[https://nixos.org/][nix]], to build, you simple write ~nix build~
+after cloning the repository. If you want to run the program, simply use ~nix
+run~ and the program will be build and run. Currently the only support platform
+is x86_64 linux.
+
+If you want to build on other platforms, use the [[https://lean-lang.org/doc/reference/latest/Build-Tools-and-Distribution/Lake/][lake toolchain]] to do so. Use
+~lake build~ to build the program. ~lake exe lean-calc~ can be used to build and
+run the program.
+
+* Use of AI
+For this project, the LLM Google Gemini has been used to help grasp Lean4
+conepts, and to lend a helping hand with constructing proofs. Furthermore,
+Google Gemini has been used to construct a pretty printer, with debugging in
+mind. I did not participate in creating this pretty printer, this information
+also figures in the source code of the pretty printer.
+
+Every where else, the source is made by me, sometimes aided by Google Gemini; in
+places where Google Gemini has helped, namely with proofs, it is written in a
+comment, directly above the construct.
